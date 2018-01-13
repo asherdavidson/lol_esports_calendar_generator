@@ -25,27 +25,35 @@ def session_scope():
 
 @as_declarative()
 class Base(object):
-    @classmethod
-    def get_or_create(cls, session, id) -> 'cls':
-        obj = session.query(cls).filter(cls.id == id).one_or_none()
-        if not obj:
-            obj = cls(id=id)
-        return obj
+    def __repr__(self):
+        cls = type(self)
+        column_names = [c.name for c in cls.__table__.columns]
+        column_values = [repr(getattr(self, column_name)) for column_name in column_names]
+
+        params_str = ""
+        for i in range(len(column_names)):
+            params_str += "{}={}, ".format(column_names[i], column_values[i])
+        params_str = params_str[:-2]
+
+        return "{}({})".format(cls.__name__,
+                               params_str)
 
     @classmethod
     def create_or_update(cls, session, id, **new_fields):
         column_names = [c.name for c in cls.__table__.columns]
 
         obj = session.query(cls).filter(cls.id == id).one_or_none()
-        if not obj:
-            obj = cls(id=id)
 
-        for column_name, new_value in new_fields.items():
-            if column_name in column_names:
-                setattr(obj, column_name, new_value)
+        if obj:
+            for column_name, new_value in new_fields.items():
+                if column_name in column_names:
+                    setattr(obj, column_name, new_value)
+        else:
+            obj = cls(id=id, **new_fields)
 
         session.add(obj)
-        return True
+
+        return obj
 
 
 class League(Base):
@@ -58,14 +66,8 @@ class League(Base):
     logo_url = Column(String)
 
     tournaments = relationship('Tournament', order_by='Tournament.id', back_populates='league')
+    brackets = relationship('Bracket', order_by='Bracket.id', back_populates='league')
     matches = relationship('Match', order_by='Match.id', back_populates='league')
-
-    @classmethod
-    def get_or_create(cls, session, id) -> 'League':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'League(name="{}")'.format(self.name)
 
 
 class Tournament(Base):
@@ -82,13 +84,6 @@ class Tournament(Base):
     rosters = relationship('Roster', order_by='Roster.id', back_populates='tournament')
     matches = relationship('Match', order_by='Match.id', back_populates='tournament')
 
-    @classmethod
-    def get_or_create(cls, session, id) -> 'Tournament':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'Tournament(title="{}")'.format(self.title)
-
 
 class Bracket(Base):
     __tablename__ = 'brackets'
@@ -103,14 +98,10 @@ class Bracket(Base):
     tournament_id = Column(String, ForeignKey('tournaments.id'))
     tournament = relationship('Tournament', back_populates='brackets')
 
+    league_id = Column(String, ForeignKey('leagues.id'))
+    league = relationship('League', back_populates='brackets')
+
     matches = relationship('Match', order_by='Match.id', back_populates='bracket')
-
-    @classmethod
-    def get_or_create(cls, session, id) -> 'Bracket':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'Bracket(name="{}")'.format(self.name)
 
 
 class Match(Base):
@@ -150,13 +141,6 @@ class Match(Base):
     roster_b_id = Column(String, ForeignKey('rosters.id'))
     roster_b = relationship('Roster', foreign_keys=[roster_b_id])
 
-    @classmethod
-    def get_or_create(cls, session, id) -> 'Match':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'Match(name="{}")'.format(self.name)
-
 
 class Roster(Base):
     __tablename__ = 'rosters'
@@ -170,13 +154,6 @@ class Roster(Base):
     team_id = Column(Integer, ForeignKey('teams.id'))
     team = relationship('Team', back_populates='rosters')
 
-    @classmethod
-    def get_or_create(cls, session, id) -> 'Roster':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'Roster(name="{}")'.format(self.name)
-
 
 class Team(Base):
     __tablename__ = 'teams'
@@ -187,13 +164,6 @@ class Team(Base):
     acronym = Column(String, unique=True)
 
     rosters = relationship('Roster', back_populates='team')
-
-    @classmethod
-    def get_or_create(cls, session, id) -> 'Team':
-        return super().get_or_create(session, id)
-
-    def __repr__(self):
-        return 'Team(name="{}")'.format(self.name)
 
 
 def create_tables():

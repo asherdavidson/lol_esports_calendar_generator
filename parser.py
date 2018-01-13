@@ -28,11 +28,10 @@ def import_league_data(league_id):
             title = tournament_data.get('title')
             description = tournament_data.get('description')
 
-            tournament = Tournament.get_or_create(s, id)
-            tournament.title = title
-            tournament.description = description
-            tournament.league = league
-            s.add(tournament)
+            tournament = Tournament.create_or_update(s, id,
+                                                     title=title,
+                                                     description=description,
+                                                     league_id=league.id)
 
             rosters = tournament_data.get('rosters')
             for roster_id in rosters:
@@ -41,18 +40,16 @@ def import_league_data(league_id):
                 id = int(roster_data.get('team'))
                 acronym = roster_data.get('name')
 
-                team = Team.get_or_create(s, id)
-                team.acronym = acronym
-                s.add(team)
+                team = Team.create_or_update(s, id,
+                                             acronym=acronym)
 
                 id = roster_data.get('id')
                 name = roster_data.get('name')
 
-                roster = Roster.get_or_create(s, id)
-                roster.name = name
-                roster.tournament = tournament
-                roster.team = team
-                s.add(roster)
+                Roster.create_or_update(s, id,
+                                        tournament=tournament,
+                                        name=name,
+                                        team=team)
 
             brackets = tournament_data.get('brackets')
             for bracket_id in brackets:
@@ -64,17 +61,17 @@ def import_league_data(league_id):
                 group_position = bracket_data.get('groupPosition')
                 group_name = bracket_data.get('groupName')
 
-                bracket = Bracket.get_or_create(s, id)
-                bracket.name = name
-                bracket.position = position
-                bracket.group_position = group_position
-                bracket.group_name = group_name
-                bracket.tournament = tournament
-                s.add(bracket)
+                bracket = Bracket.create_or_update(s, id,
+                                                   league=league,
+                                                   tournament=tournament,
+                                                   name=name,
+                                                   position=position,
+                                                   group_position=group_position,
+                                                   group_name=group_name)
 
                 matches = bracket_data.get('matches')
-                for match_id in matches:
-                    match_data = matches[match_id]
+                for id in matches:
+                    match_data = matches[id]
 
                     id = match_data.get('id')
                     name = match_data.get('name')
@@ -87,72 +84,91 @@ def import_league_data(league_id):
                     roster_b_id = match_data.get('input')[1].get('roster')
                     roster_b = s.query(Roster).filter(Roster.id == roster_b_id).one()
 
-                    match = Match.get_or_create(s, id)
-                    match.name = name
-                    match.num_matches = num_matches
-                    match.position = position
-                    match.group_position = group_position
-                    match.league = league
-                    match.tournament = tournament
-                    match.bracket = bracket
-                    match.roster_a = roster_a
-                    match.roster_b = roster_b
-                    match.team_a = match.roster_a.team
-                    match.team_b = match.roster_b.team
-                    s.add(match)
+                    Match.create_or_update(s, id,
+                                           league=league,
+                                           tournament=tournament,
+                                           bracket=bracket,
+                                           name=name,
+                                           # scheduled_time =
+                                           num_matches=num_matches,
+                                           position=position,
+                                           group_position=group_position,
+                                           roster_a_id=roster_a_id,
+                                           roster_a=roster_a,
+                                           roster_b_id=roster_b_id,
+                                           roster_b=roster_b)
+
+        teams_data = json.get('teams')
+        for team_data in teams_data:
+            id = team_data.get('id')
+            slug = team_data.get('slug')
+            name = team_data.get('name')
+
+            Team.create_or_update(s, id,
+                                  slug=slug,
+                                  name=name)
 
         schedule_items = json.get('scheduleItems')
         for match_data in schedule_items:
-            match_id = match_data.get('match')
-            if match_id:
+            id = match_data.get('match')
+            if id:
                 scheduled_time = parser.parse(match_data.get('scheduledTime'))
                 block_label = match_data.get('tags').get('blockLabel')
                 sub_block_label = match_data.get('tags').get('subBlockLabel')
                 block_prefix = match_data.get('tags').get('blockPrefix')
                 sub_block_prefix = match_data.get('tags').get('subBlockPrefix')
 
-                match = Match.get_or_create(s, match_id)
-                match.scheduled_time = scheduled_time
-                match.block_label = block_label
-                match.sub_block_label = sub_block_label
-                match.block_prefix = block_prefix
-                match.sub_block_prefix = sub_block_prefix
-                s.add(match)
+                Match.create_or_update(s, id,
+                                       scheduled_time=scheduled_time,
+                                       block_label=block_label,
+                                       sub_block_label=sub_block_label,
+                                       block_prefix=block_prefix,
+                                       sub_block_prefix=sub_block_prefix)
 
 
-def import_league_information():
-    for i in range(1, 70):
-        r = requests.get(LEAGUES_URL.format(i))
-        json = r.json()
-        try:
-            league_data = json.get('leagues')[0]
+def import_league_information(id):
+    r = requests.get(LEAGUES_URL.format(id))
+    json = r.json()
+    try:
+        league_data = json.get('leagues')[0]
 
-            slug = league_data.get('slug')
-            name = league_data.get('name')
-            region = league_data.get('region')
-            logo_url = league_data.get('logoUrl')
+        slug = league_data.get('slug')
+        name = league_data.get('name')
+        region = league_data.get('region')
+        logo_url = league_data.get('logoUrl')
 
-            print(i, league_data.get('name'))
-            with session_scope() as s:
-                league = League.get_or_create(s, i)
-                league.slug = slug
-                league.name = name
-                league.region = region
-                league.logo_url = logo_url
-                s.add(league)
-        except TypeError:
-            print(i, 'ERROR')
+        print(id, name)
+        with session_scope() as s:
+            League.create_or_update(s, id,
+                                    slug=slug,
+                                    name=name,
+                                    region=region,
+                                    logo_url=logo_url)
+
+            # league = League.get_or_create(s, id)
+            # league.slug = slug
+            # league.name = name
+            # league.region = region
+            # league.logo_url = logo_url
+            # slug.add(league)
+    except TypeError:
+        print(id, 'ERROR')
+
+
+def import_all_league_information():
+    for id in range(2, 3):  # 1 to 70
+        import_league_information(id)
 
 
 if __name__ == '__main__':
-    # import_league_information()
+    import_all_league_information()
 
     # with session_scope() as s:
     #     for id, name in s.query(League.id, League.name).all():
     #         print('Importing {} ({})'.format(name, id))
     #         import_league_data(id)
 
-    # import_league_data(1)
+    import_league_data(2)
 
-    with session_scope() as s:
-        League.create_or_update(s, 1000, slug='test-slug', name='Best league?', region='your pants')
+    # with session_scope() as s:
+    #     League.create_or_update(s, 1000, slug='test-slug', name='Best league?', region='your pants')
