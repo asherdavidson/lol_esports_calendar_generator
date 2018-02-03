@@ -1,5 +1,7 @@
 from contextlib import contextmanager
+from datetime import timedelta, timezone
 
+from icalendar import Event
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import sessionmaker, relationship
@@ -8,6 +10,10 @@ DB_FILE_NAME = 'datastore.db'
 
 engine = create_engine('sqlite:///{}'.format(DB_FILE_NAME), echo=False, connect_args={'check_same_thread': False})
 Session = sessionmaker(bind=engine)
+
+
+def utc_to_local(utc_dt, tz):
+    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=tz)
 
 
 @contextmanager
@@ -40,13 +46,11 @@ class Base(object):
 
     @classmethod
     def create_or_update(cls, session, id, **new_fields):
-        column_names = [c.name for c in cls.__table__.columns]
-
         obj = session.query(cls).filter(cls.id == id).one_or_none()
 
         if obj:
             for column_name, new_value in new_fields.items():
-                if column_name in column_names:
+                if new_value: # Don't accidentally null out fields
                     setattr(obj, column_name, new_value)
         else:
             obj = cls(id=id, **new_fields)
@@ -69,6 +73,9 @@ class League(Base):
     brackets = relationship('Bracket', order_by='Bracket.id', back_populates='league')
     matches = relationship('Match', order_by='Match.id', back_populates='league')
 
+    def __str__(self):
+        return self.name
+
 
 class Tournament(Base):
     __tablename__ = 'tournaments'
@@ -83,6 +90,9 @@ class Tournament(Base):
     brackets = relationship('Bracket', order_by='Bracket.id', back_populates='tournament')
     rosters = relationship('Roster', order_by='Roster.id', back_populates='tournament')
     matches = relationship('Match', order_by='Match.id', back_populates='tournament')
+
+    def __str__(self):
+        return self.description
 
 
 class Bracket(Base):
@@ -102,6 +112,9 @@ class Bracket(Base):
     league = relationship('League', back_populates='brackets')
 
     matches = relationship('Match', order_by='Match.id', back_populates='bracket')
+
+    def __str__(self):
+        return self.name.title().replace('_', ' ')
 
 
 class Match(Base):
@@ -141,6 +154,48 @@ class Match(Base):
     roster_b_id = Column(String, ForeignKey('rosters.id'))
     roster_b = relationship('Roster', foreign_keys=[roster_b_id])
 
+    def __str__(self):
+        vs_str = "No teams"
+        if self.team_a and self.team_b:
+            vs_str = "{} vs {}".format(self.team_a.acronym, self.team_b.acronym)
+        else:
+            vs_str = self.name.replace('-', ' ')
+        return "{}: {}".format(str(self.bracket), vs_str)
+
+    def get_ical_event(self, tz):
+        dtstart = utc_to_local(self.scheduled_time, tz).date()
+        # dtend = utc_to_local(self.scheduled_time, tz).date()
+        dtstamp = utc_to_local(self.scheduled_time, tz).date()
+
+        # dtstart = self.scheduled_time.date()
+        # dtend = self.scheduled_time.date()
+        # dtstamp = self.scheduled_time.date()
+
+        event = Event()
+        event.add('summary', str(self))
+        event.add('dtstart', dtstart)
+        # event.add('dtend', dtend)
+        event.add('dtstamp', dtstamp)
+        return event
+
+    def get_ical_event_with_time(self, tz):
+        delta = timedelta(hours=self.num_matches)
+        dtstart = utc_to_local(self.scheduled_time, tz)
+        dtend = utc_to_local(self.scheduled_time + delta, tz)
+        dtstamp = utc_to_local(self.scheduled_time, tz).date()
+
+        # dtstart = self.scheduled_time
+        # dtend = self.scheduled_time + delta
+        # dtstamp = self.scheduled_time.date()
+
+        event = Event()
+        event.add('summary', str(self))
+        event.add('dtstart', dtstart)
+        event.add('dtend', dtend)
+        event.add('dtstamp', dtstamp)
+
+        return event
+
 
 class Roster(Base):
     __tablename__ = 'rosters'
@@ -161,7 +216,7 @@ class Team(Base):
     id = Column(Integer, primary_key=True)
     slug = Column(String)
     name = Column(String)
-    acronym = Column(String, unique=True)
+    acronym = Column(String)
 
     rosters = relationship('Roster', back_populates='team')
 
