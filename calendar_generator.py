@@ -48,8 +48,6 @@ def query_leagues_exclude_teams(s, leagues, start_date=datetime(2018, 1, 1)) -> 
         queries.append(query)
 
     query = queries[0].union(*queries[1:])
-    # for q in queries[1:]:
-    #     query = query.union(q)
 
     query = query.order_by(Match.scheduled_time)
 
