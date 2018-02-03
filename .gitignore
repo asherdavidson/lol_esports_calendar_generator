@@ -1,6 +1,11 @@
 # Custom
 *.ics
 *.db
+.idea/lol_esports_parser.iml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
