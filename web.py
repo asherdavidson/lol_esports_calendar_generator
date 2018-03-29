@@ -59,5 +59,5 @@ def spawn_updater():
 
 
 if __name__ == '__main__':
-    spawn_updater()
+    # spawn_updater()
     app.run(debug=True)
