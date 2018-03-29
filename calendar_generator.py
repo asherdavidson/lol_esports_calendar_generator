@@ -12,7 +12,7 @@ def write_cal_to_file(cal, filename):
         f.write(cal.to_ical())
 
 
-def generate_cal(s, query, tz):
+def generate_cal(s, query, tz) -> Calendar:
     cal = Calendar()
     # cal.add('dtstart', datetime(2017, 1, 1).date())  # TODO
     cal.add('summary', "LoL eSports Calendar")
@@ -26,7 +26,7 @@ def generate_cal(s, query, tz):
     return cal
 
 
-def query_leagues_exclude_teams(s, leagues, start_date=datetime(2018, 1, 1)) -> Query:
+def query_leagues_exclude_teams(s, leagues, start_date=datetime(2018, 3, 20)) -> Query:
     """
     example_leagues = {
         2: None,  # 2:   NA LCS
@@ -59,7 +59,8 @@ if __name__ == '__main__':
         leagues = {
             1: None,  # 1:   All-Star
             2: None,  # 2:   NA LCS
-            6: [9, 433, 174, 434],  # 6:   LCK - Champions Korea
+            3: None,  # 3:   EU LCS
+            6: None,  # 6:   LCK - Champions Korea
             9: None,  # 9:   World Championship
             10: None,  # 10: Mid-Season Invitational
             20: None,  # 20: uLoL Campus Series
@@ -68,6 +69,7 @@ if __name__ == '__main__':
             41: None,  # 41: League of Legends College Championship
             43: None,  # 43: Rift Rivals
             49: None,  # 49: LeagueU
+            51: None,  # 51: NA Academy
         }
 
         query = query_leagues_exclude_teams(s, leagues)

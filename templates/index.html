@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Index Page</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script type="text/javascript" src="/static/script.js"></script>
+</head>
+<body>
+<div>
+    <span>Your link: </span>
+    <a id="calendar_url" href="#"></a>
+</div>
+{% for league in leagues %}
+<div id="{{ league.id }}" class="league-button">
+    <img src="{{ league.logo_url }}">
+    <p>{{ league }}</p>
+</div>
+{% endfor %}
+
+</body>
+</html>

@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from datetime import timedelta, timezone
 
 from icalendar import Event
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -50,7 +50,7 @@ class Base(object):
 
         if obj:
             for column_name, new_value in new_fields.items():
-                if new_value: # Don't accidentally null out fields
+                if new_value:  # Don't accidentally null out fields
                     setattr(obj, column_name, new_value)
         else:
             obj = cls(id=id, **new_fields)
@@ -68,10 +68,16 @@ class League(Base):
     name = Column(String, unique=True)
     region = Column(String)
     logo_url = Column(String)
+    visible = Column(Boolean)
+    order = Column(Integer, unique=True)
 
     tournaments = relationship('Tournament', order_by='Tournament.id', back_populates='league')
     brackets = relationship('Bracket', order_by='Bracket.id', back_populates='league')
     matches = relationship('Match', order_by='Match.id', back_populates='league')
+
+    @classmethod
+    def get_front_page_items(cls, s):
+        return s.query(League).filter(League.order).order_by(League.order)
 
     def __str__(self):
         return self.name

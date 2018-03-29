@@ -168,13 +168,20 @@ def import_all_league_information():
         import_league_information(id)
 
 
+def import_all_league_data():
+    with session_scope() as s:
+        for id, name in s.query(League.id, League.name).order_by(League.id):
+            print('Importing {} ({})'.format(name, id))
+            try:
+                import_league_data(id)
+            except:
+                print('Error importing {} ({})'.format(name, id))
+
+
 if __name__ == '__main__':
     # import_all_league_information()
 
-    with session_scope() as s:
-        for id, name in s.query(League.id, League.name).order_by(League.id)[:]:
-            print('Importing {} ({})'.format(name, id))
-            import_league_data(id)
+    import_all_league_data()
 
     # import_league_data(2)
 

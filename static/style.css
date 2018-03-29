@@ -1,0 +1,31 @@
+html {
+    background-color: #f0f8ff;
+}
+
+img {
+    width: 200px;
+    height: 200px;
+}
+
+.league-button {
+    display: inline-block;
+    border: 2px solid #ff7f50;
+    border-radius: 10px;
+    margin: 2px;
+    background-color: #9acd32;
+
+}
+
+.league-button:hover {
+    border-color: #d2691e;
+    cursor: pointer;
+    background-color: #83ad2a;
+}
+
+.clicked {
+    background-color: #742bff;
+}
+
+.clicked:hover {
+    background-color: #8a46ff;
+}
