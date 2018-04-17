@@ -181,9 +181,11 @@ def import_all_league_data():
 if __name__ == '__main__':
     # import_all_league_information()
 
-    import_all_league_data()
+    # import_all_league_data()
 
     # import_league_data(2)
 
-    # with session_scope() as s:
-    #     League.create_or_update(s, 1000, slug='test-slug', name='Best league?', region='your pants')
+    with session_scope() as s:
+        id = s.query(League.id).filter(League.slug == 'lck').one()
+        import_league_data(id[0])
+

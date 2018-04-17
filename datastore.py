@@ -166,6 +166,7 @@ class Match(Base):
             vs_str = "{} vs {}".format(self.team_a.acronym, self.team_b.acronym)
         else:
             vs_str = self.name.replace('-', ' ')
+
         return "{}: {}".format(str(self.bracket), vs_str)
 
     def get_ical_event(self, tz):
