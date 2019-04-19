@@ -13,29 +13,21 @@ function UrlGenerator(root) {
         if (this.leagues.length === 0)
             return "Add some teams!!";
 
-        let result = "";
+        let leagues = [];
 
         for (let i = 0; i < this.leagues.length; i++) {
             let elem = document.getElementById(this.leagues[i]);
             let league_name = elem.children.item(1).innerHTML;
-
-            if (i === this.leagues.length - 1)
-                result += league_name;
-            else
-                result += league_name + ", ";
+            leagues.push(league_name);
         }
-        return result;
+        return leagues.join(", ");
     };
 
     this.url = function () {
         if (this.leagues.length === 0)
             return "#";
 
-        let result = "";
-        for (let i = 0; i < this.leagues.length; i++) {
-            result += this.leagues[i] + "&";
-        }
-        return this.root + "?" + result;
+        return `${this.root}?leagues=${this.leagues.join(",")}`;
     }
 }
 
@@ -47,8 +39,8 @@ function toggle_class(element, cls) {
 }
 
 
-window.onload = function () {
-    let url_gen = new UrlGenerator(window.location.toString() + "api/query_leagues_exclude_teams");
+function main() {
+    let url_gen = new UrlGenerator(window.location.toString() + "api/query_leagues");
 
     let league_buttons = document.getElementsByClassName("league-button");
 
@@ -65,3 +57,5 @@ window.onload = function () {
     }
 
 }
+
+window.addEventListener("DOMContentLoaded", main);

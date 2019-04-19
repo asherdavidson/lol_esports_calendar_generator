@@ -12,9 +12,9 @@
     <a id="calendar_url" href="#"></a>
 </div>
 {% for league in leagues %}
-<div id="{{ league.id }}" class="league-button">
-    <img src="{{ league.logo_url }}">
-    <p>{{ league }}</p>
+<div id="{{ league.slug }}" class="league-button">
+    <img src="{{ league.image_url }}">
+    <p>{{ league.name }}</p>
 </div>
 {% endfor %}
 
