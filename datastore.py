@@ -1,13 +1,8 @@
-from datetime import timedelta, timezone
+from datetime import timedelta
 
 from dateutil.parser import parse
 from icalendar import Event
 from peewee import *
-
-
-def utc_to_local(utc_dt, tz):
-    return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=tz)
-
 
 DB_FILE_NAME = 'datastore.db'
 
@@ -55,9 +50,6 @@ class Match(BaseModel):
         start_time = parse(self.start_time)
 
         delta = timedelta(hours=self.number_of_matches)
-        # dtstart = utc_to_local(self.scheduled_time, tz)
-        # dtend = utc_to_local(self.scheduled_time + delta, tz)
-        # dtstamp = utc_to_local(self.scheduled_time, tz).date()
 
         dtstart = start_time
         dtend = start_time + delta
