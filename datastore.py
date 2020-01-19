@@ -4,7 +4,7 @@ from dateutil.parser import parse
 from icalendar import Event
 from peewee import *
 
-DB_FILE_NAME = 'datastore.db'
+from app_config import DB_FILE_NAME
 
 db = SqliteDatabase(DB_FILE_NAME)
 

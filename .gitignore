@@ -1,4 +1,5 @@
 # Custom
+app_config.py
 *.ics
 *.db
 .idea/lol_esports_parser.iml
