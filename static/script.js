@@ -17,7 +17,7 @@ function UrlGenerator(root) {
 
         for (let i = 0; i < this.leagues.length; i++) {
             let elem = document.getElementById(this.leagues[i]);
-            let league_name = elem.children.item(1).innerHTML;
+            let league_name = elem.children[1].children[0].innerHTML;
             leagues.push(league_name);
         }
         return leagues.join(", ");
@@ -40,7 +40,7 @@ function toggle_class(element, cls) {
 
 
 function main() {
-    let url_gen = new UrlGenerator(window.location.toString() + "api/query_leagues");
+    let url_gen = new UrlGenerator(window.location.origin + "/api/query-leagues");
 
     let league_buttons = document.getElementsByClassName("league-button");
 

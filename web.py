@@ -16,7 +16,7 @@ def index():
     return template
 
 
-@app.route('/api/query_leagues')
+@app.route('/api/query-leagues')
 def api_query_leagues():
     leagues = request.args.get('leagues').split(',')
 
@@ -32,4 +32,4 @@ def api_query_leagues():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)

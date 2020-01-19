@@ -2,23 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Index Page</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script type="text/javascript" src="/static/script.js"></script>
 </head>
 <body>
-<div>
-    <span>Your link: </span>
-    <a id="calendar_url" href="#"></a>
+<div class="container">
+    <div class="row">
+        <div class="col text-center m-2">
+            <h1>LoL eSports Calendar Generator</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col alert alert-primary mx-3 text-center">
+            <span>Your link: </span>
+            <a id="calendar_url" href="#"></a>
+        </div>
+    </div>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6">
+        {% for league in leagues %}
+        <div class="col my-2">
+            <div id="{{ league.slug }}" class="card text-center h-100 bg-light league-button">
+                <img src="https://am-a.akamaihd.net/image/?resize=200:200&f={{ league.image_url }}"
+                     class="card-img-top bg-dark">
+                <div class="p-2 my-auto">
+                    <h5 class="card-text">{{ league.name }}</h5>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col text-center">
+            <p><a href="https://github.com/asherdavidson/lol_esports_calendar_generator">Source Code</a></p>
+        </div>
+    </div>
 </div>
-{% for league in leagues %}
-<div id="{{ league.slug }}" class="league-button">
-    <img src="{{ league.image_url }}">
-    <p>{{ league.name }}</p>
-</div>
-{% endfor %}
-
-<p><a href="https://github.com/asherdavidson/lol_esports_calendar_generator">Source Code</a></p>
 
 </body>
 </html>
