@@ -6,6 +6,8 @@ from datastore import League, Match
 API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'
 HEADERS = {
     'x-api-key': API_KEY,
+    'User-Agent': 'LOL eSports Parser|https://github.com/asherdavidson/lol_esports_calendar_generator|'
+                  'asher@asherdavidson.net'
 }
 
 LEAGUES_URL = 'https://prod-relapi.ewp.gg/persisted/gw/getLeagues?hl=en-US'
