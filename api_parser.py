@@ -34,6 +34,7 @@ def league_data():
 
 
 def import_leagues():
+    print('Importing leagues')
     League.replace_many(league_data()).execute()
 
 
@@ -63,10 +64,10 @@ def match_data():
 
 
 def import_matches():
+    print('Importing matches')
     Match.replace_many(match_data()).execute()
 
 
 if __name__ == '__main__':
     import_leagues()
-
     import_matches()
