@@ -12,6 +12,7 @@ HEADERS = {
 
 LEAGUES_URL = 'https://prod-relapi.ewp.gg/persisted/gw/getLeagues?hl=en-US'
 MATCHES_URL = 'https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US'
+MATCHES_URL_PAGE_TOKEN = 'https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US&pageToken={}'
 
 
 def league_data():
@@ -40,10 +41,8 @@ def import_leagues():
     League.replace_many(league_data()).execute()
 
 
-def match_data():
-    r = requests.get(MATCHES_URL, headers=HEADERS)
-
-    for data in r.json()['data']['schedule']['events']:
+def match_data(json):
+    for data in json['data']['schedule']['events']:
         id = data['match']['id']
         start_time = parse(data['startTime'])
         block_name = data['blockName']
@@ -67,7 +66,14 @@ def match_data():
 
 def import_matches():
     print('Importing matches')
-    Match.replace_many(match_data()).execute()
+
+    r = requests.get(MATCHES_URL, headers=HEADERS)
+    Match.replace_many(match_data(r.json())).execute()
+
+    while next_page_token := r.json()['data']['schedule']['pages'].get('newer', False):
+        print(f'Downloading next page {next_page_token}')
+        r = requests.get(MATCHES_URL_PAGE_TOKEN.format(next_page_token), headers=HEADERS)
+        Match.replace_many(match_data(r.json())).execute()
 
 
 if __name__ == '__main__':
