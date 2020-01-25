@@ -1,4 +1,5 @@
 from datetime import timedelta
+from functools import lru_cache
 from typing import List, Optional, Iterable
 
 import redis
@@ -7,7 +8,6 @@ from icalendar import Event, Calendar
 from peewee import *
 
 from app_config import DB_FILE_NAME
-from backend.web import app
 
 sqlite_db = SqliteDatabase(DB_FILE_NAME)
 redis_db = redis.Redis(host='localhost', port=6379, db=0)
@@ -32,7 +32,8 @@ class League(BaseModel):
         return self.name
 
     @staticmethod
-    def get_front_page_items() -> Iterable['League']:
+    @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
+    def get_front_page_items(date) -> Iterable['League']:
         return League.select().order_by(League.priority)
 
     @staticmethod
@@ -89,20 +90,17 @@ class Match(BaseModel):
 class CalendarCache:
     @staticmethod
     def clear():
-        app.logger.info('Clearing the calendar cache')
         redis_db.delete(*redis_db.keys())
 
     @staticmethod
-    def get_or_create_calender(leagues: List[str]) -> bytes:
+    def get_calender(leagues: List[str]) -> bytes:
         id = 'calendar-cache:' + ','.join(sorted(leagues))
 
         calendar: Optional[bytes] = redis_db.get(id)
 
         if calendar is not None:
-            app.logger.info(f'Calendar for {id} exists')
             return calendar
 
-        app.logger.info(f'Creating calendar for {id}')
         calendar = League.generate_cal(leagues)
         redis_db.set(id, calendar)
 
