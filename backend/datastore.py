@@ -1,18 +1,21 @@
 from datetime import timedelta
 from typing import List, Optional, Iterable
 
+import redis
 from dateutil.parser import parse
 from icalendar import Event, Calendar
 from peewee import *
 
 from app_config import DB_FILE_NAME
+from backend.web import app
 
-db = SqliteDatabase(DB_FILE_NAME)
+sqlite_db = SqliteDatabase(DB_FILE_NAME)
+redis_db = redis.Redis(host='localhost', port=6379, db=0)
 
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = sqlite_db
 
 
 class League(BaseModel):
@@ -41,7 +44,7 @@ class League(BaseModel):
                 .order_by(Match.start_time))
 
     @staticmethod
-    def generate_cal(leagues) -> Calendar:
+    def generate_cal(leagues) -> bytes:
         matches = League.query_league_matches(leagues)
 
         cal = Calendar()
@@ -70,13 +73,9 @@ class Match(BaseModel):
         return f'{self.league.name}{block_name_formatted}: {self.team_a} vs {self.team_b} (bo{self.number_of_matches})'
 
     def get_ical_event_with_time(self):
-        start_time = parse(self.start_time)
-
-        delta = timedelta(hours=self.number_of_matches)
-
-        dtstart = start_time
-        dtend = start_time + delta
-        dtstamp = start_time.date()
+        dtstart = parse(self.start_time)
+        dtend = dtstart + timedelta(hours=self.number_of_matches)
+        dtstamp = dtstart.date()
 
         event = Event()
         event.add('summary', str(self))
@@ -87,48 +86,47 @@ class Match(BaseModel):
         return event
 
 
-class CalendarCache(BaseModel):
-    id = CharField(primary_key=True)
-    calendar = BlobField()
+class CalendarCache:
+    @staticmethod
+    def clear():
+        app.logger.info('Clearing the calendar cache')
+        redis_db.delete(*redis_db.keys())
 
     @staticmethod
-    def clear_cache():
-        print('WARNING: Clearing the calendar cache')
-        CalendarCache.delete()  # deletes all rows from table
+    def get_or_create_calender(leagues: List[str]) -> bytes:
+        id = 'calendar-cache:' + ','.join(sorted(leagues))
 
-    @staticmethod
-    def get_or_create_calendar(leagues: List[str]) -> bytes:
-        id = ','.join(sorted(leagues))
+        calendar: Optional[bytes] = redis_db.get(id)
 
-        model: Optional[CalendarCache] = CalendarCache.get_or_none(id=id)
+        if calendar is not None:
+            app.logger.info(f'Calendar for {id} exists')
+            return calendar
 
-        if model is not None:
-            return model.calendar
-
+        app.logger.info(f'Creating calendar for {id}')
         calendar = League.generate_cal(leagues)
-        CalendarCache.create(id=id, calendar=calendar)
+        redis_db.set(id, calendar)
+
         return calendar
 
 
 MODELS = [
     League,
     Match,
-    CalendarCache,
 ]
 
 
 def create_tables():
     print(f'WARNING: Creating tables: {", ".join(map(str, MODELS))}')
-    db.create_tables(MODELS)
+    sqlite_db.create_tables(MODELS)
 
 
 def drop_tables():
     print(f'WARNING: Dropping tables: {", ".join(map(str, MODELS))}')
-    db.drop_tables(MODELS)
+    sqlite_db.drop_tables(MODELS)
 
 
 if __name__ == '__main__':
     # drop_tables()
     # create_tables()
 
-    CalendarCache.clear_cache()
+    CalendarCache.clear()

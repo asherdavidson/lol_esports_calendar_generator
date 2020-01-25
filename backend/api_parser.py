@@ -1,9 +1,9 @@
 import requests
 from dateutil.parser import parse
 
-from datastore import League, Match, drop_tables, create_tables, db
+from backend.datastore import League, Match, drop_tables, create_tables, sqlite_db, CalendarCache
 
-API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'
+API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'  # public API key
 HEADERS = {
     'x-api-key': API_KEY,
     'User-Agent': 'LOL eSports Parser|https://github.com/asherdavidson/lol_esports_calendar_generator|'
@@ -77,12 +77,14 @@ def import_matches():
 
 
 def import_all():
-    with db.atomic():
+    with sqlite_db.atomic():
         drop_tables()
         create_tables()
 
         import_leagues()
         import_matches()
+
+    CalendarCache.clear()
 
 
 if __name__ == '__main__':
