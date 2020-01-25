@@ -34,7 +34,7 @@ class League(BaseModel):
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
     def get_front_page_items(date) -> Iterable['League']:
-        return League.select().order_by(League.priority)
+        return list(League.select().order_by(League.priority))
 
     @staticmethod
     def query_league_matches(leagues):
