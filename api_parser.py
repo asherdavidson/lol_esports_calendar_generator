@@ -1,7 +1,7 @@
 import requests
 from dateutil.parser import parse
 
-from datastore import League, Match
+from datastore import League, Match, drop_tables, create_tables
 
 API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'
 HEADERS = {
@@ -76,6 +76,13 @@ def import_matches():
         Match.replace_many(match_data(r.json())).execute()
 
 
-if __name__ == '__main__':
+def import_all():
+    drop_tables()
+    create_tables()
+
     import_leagues()
     import_matches()
+
+
+if __name__ == '__main__':
+    import_all()

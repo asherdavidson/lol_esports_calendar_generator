@@ -1,7 +1,8 @@
 from datetime import timedelta
+from typing import List, Optional, Iterable
 
 from dateutil.parser import parse
-from icalendar import Event
+from icalendar import Event, Calendar
 from peewee import *
 
 from app_config import DB_FILE_NAME
@@ -28,8 +29,30 @@ class League(BaseModel):
         return self.name
 
     @staticmethod
-    def get_front_page_items():
+    def get_front_page_items() -> Iterable['League']:
         return League.select().order_by(League.priority)
+
+    @staticmethod
+    def query_league_matches(leagues):
+        return (Match
+                .select(Match, League)
+                .join(League)
+                .where(League.slug.in_(leagues))
+                .order_by(Match.start_time))
+
+    @staticmethod
+    def generate_cal(leagues) -> Calendar:
+        matches = League.query_league_matches(leagues)
+
+        cal = Calendar()
+        cal.add('summary', "LoL eSports Calendar")
+        cal.add('prodid', '-//LoL eSports Calendar Generator//asherdavidson.net//')
+        cal.add('x-wr-calname', "LoL eSports Calendar")
+
+        for match in matches:
+            cal.add_component(match.get_ical_event_with_time())
+
+        return cal.to_ical()
 
 
 class Match(BaseModel):
@@ -64,20 +87,48 @@ class Match(BaseModel):
         return event
 
 
+class CalendarCache(BaseModel):
+    id = CharField(primary_key=True)
+    calendar = BlobField()
+
+    @staticmethod
+    def clear_cache():
+        print('WARNING: Clearing the calendar cache')
+        CalendarCache.delete()  # deletes all rows from table
+
+    @staticmethod
+    def get_or_create_calendar(leagues: List[str]) -> bytes:
+        id = ','.join(sorted(leagues))
+
+        model: Optional[CalendarCache] = CalendarCache.get_or_none(id=id)
+
+        if model is not None:
+            return model.calendar
+
+        calendar = League.generate_cal(leagues)
+        CalendarCache.create(id=id, calendar=calendar)
+        return calendar
+
+
 MODELS = [
     League,
     Match,
+    CalendarCache,
 ]
 
 
 def create_tables():
+    print(f'WARNING: Creating tables: {", ".join(map(str, MODELS))}')
     db.create_tables(MODELS)
 
 
 def drop_tables():
+    print(f'WARNING: Dropping tables: {", ".join(map(str, MODELS))}')
     db.drop_tables(MODELS)
 
 
 if __name__ == '__main__':
-    drop_tables()
-    create_tables()
+    # drop_tables()
+    # create_tables()
+
+    CalendarCache.clear_cache()
