@@ -15,7 +15,7 @@ def time_route(f):
         start_time = time()
         result = f(*args, **kwargs)
         end_time = time()
-        print(f'{f.__name__} took {end_time - start_time:.8f}s')
+        app.logger.debug(f'{f.__name__} took {end_time - start_time:.8f}s')
         return result
 
     return wrapper
