@@ -44,6 +44,3 @@ def api_query_leagues():
                      attachment_filename='cal.ics',
                      as_attachment=True)
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
