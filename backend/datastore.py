@@ -1,12 +1,14 @@
 from datetime import timedelta
 from functools import lru_cache
-from typing import Iterable
+from typing import Iterable, Tuple
 
 from dateutil.parser import parse
 from icalendar import Event, Calendar
-from peewee import *
+from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField, ForeignKeyField
 
 from app_config import DB_FILE_NAME
+
+# from peewee import *
 
 sqlite_db = SqliteDatabase(DB_FILE_NAME)
 
@@ -44,7 +46,7 @@ class League(BaseModel):
 
     @staticmethod
     @lru_cache
-    def generate_cal(leagues: tuple[str]) -> bytes:
+    def generate_cal(leagues: Tuple[str]) -> bytes:
         matches = League.query_league_matches(leagues)
 
         cal = Calendar()
