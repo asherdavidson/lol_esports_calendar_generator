@@ -4,7 +4,7 @@ from io import BytesIO
 from flask import render_template, request, send_file
 
 from backend import app
-from backend.datastore import League, CalendarCache
+from backend.datastore import League
 
 
 @app.route('/')
@@ -17,11 +17,11 @@ def index():
 
 @app.route('/api/query-leagues')
 def api_query_leagues():
-    leagues = request.args.get('leagues').split(',')
+    leagues = tuple(sorted(request.args.get('leagues').split(',')))
 
-    cal = CalendarCache.get_calender(leagues)
+    calendar = League.generate_cal(leagues)
 
-    io = BytesIO(cal)
+    io = BytesIO(calendar)
     io.seek(0)
 
     return send_file(io,

@@ -1,8 +1,7 @@
 from datetime import timedelta
 from functools import lru_cache
-from typing import List, Optional, Iterable
+from typing import Iterable
 
-import redis
 from dateutil.parser import parse
 from icalendar import Event, Calendar
 from peewee import *
@@ -10,7 +9,6 @@ from peewee import *
 from app_config import DB_FILE_NAME
 
 sqlite_db = SqliteDatabase(DB_FILE_NAME)
-redis_db = redis.Redis(host='localhost', port=6379, db=0)
 
 
 class BaseModel(Model):
@@ -45,7 +43,8 @@ class League(BaseModel):
                 .order_by(Match.start_time))
 
     @staticmethod
-    def generate_cal(leagues) -> bytes:
+    @lru_cache
+    def generate_cal(leagues: tuple[str]) -> bytes:
         matches = League.query_league_matches(leagues)
 
         cal = Calendar()
@@ -87,26 +86,6 @@ class Match(BaseModel):
         return event
 
 
-class CalendarCache:
-    @staticmethod
-    def clear():
-        redis_db.delete(*redis_db.keys())
-
-    @staticmethod
-    def get_calender(leagues: List[str]) -> bytes:
-        id = 'calendar-cache:' + ','.join(sorted(leagues))
-
-        calendar: Optional[bytes] = redis_db.get(id)
-
-        if calendar is not None:
-            return calendar
-
-        calendar = League.generate_cal(leagues)
-        redis_db.set(id, calendar)
-
-        return calendar
-
-
 MODELS = [
     League,
     Match,
@@ -122,9 +101,6 @@ def drop_tables():
     print(f'WARNING: Dropping tables: {", ".join(map(str, MODELS))}')
     sqlite_db.drop_tables(MODELS)
 
-
-if __name__ == '__main__':
-    # drop_tables()
-    # create_tables()
-
-    CalendarCache.clear()
+# if __name__ == '__main__':
+#     drop_tables()
+#     create_tables()

@@ -1,7 +1,7 @@
 import requests
 from dateutil.parser import parse
 
-from backend.datastore import League, Match, drop_tables, create_tables, sqlite_db, CalendarCache
+from backend.datastore import League, Match, drop_tables, create_tables, sqlite_db
 
 API_KEY = '0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z'  # public API key
 HEADERS = {
@@ -83,8 +83,6 @@ def import_all():
 
         import_leagues()
         import_matches()
-
-    CalendarCache.clear()
 
 
 if __name__ == '__main__':
