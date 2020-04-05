@@ -8,6 +8,9 @@ app_config.py
 .idea/vcs.xml
 .idea/
 .vagrant/
+/frontend/node_modules/
+*.chunk.*
+runtime-main.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

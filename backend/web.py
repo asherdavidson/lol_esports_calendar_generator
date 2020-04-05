@@ -15,6 +15,13 @@ def index():
     return template
 
 
+@app.route('/api/leagues')
+def api_leagues():
+    return {
+        'leagues': [league.to_dict() for league in League.get_front_page_items(date=datetime.now().date())]
+    }
+
+
 @app.route('/api/query-leagues')
 def api_query_leagues():
     leagues = tuple(sorted(request.args.get('leagues').split(',')))

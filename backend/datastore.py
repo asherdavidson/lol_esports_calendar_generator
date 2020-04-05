@@ -8,8 +8,6 @@ from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField
 
 from app_config import DB_FILE_NAME
 
-# from peewee import *
-
 sqlite_db = SqliteDatabase(DB_FILE_NAME)
 
 
@@ -30,6 +28,16 @@ class League(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'slug': self.slug,
+            'name': self.name,
+            'region': self.region,
+            'priority': self.priority,
+            'image_url': self.image_url,
+        }
 
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
