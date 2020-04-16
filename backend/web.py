@@ -1,7 +1,7 @@
 from datetime import datetime
 from io import BytesIO
 
-from flask import render_template, request, send_file
+from flask import render_template, request, send_file, abort
 
 from backend import app
 from backend.datastore import League
@@ -24,7 +24,10 @@ def api_leagues():
 
 @app.route('/api/query-leagues')
 def api_query_leagues():
-    leagues = tuple(sorted(request.args.get('leagues').split(',')))
+    leagues = tuple(sorted(request.args.get('leagues', '').split(',')))
+
+    if len(leagues) == 1 and leagues[0] == '':
+        return abort(400)
 
     calendar = League.generate_cal(leagues)
 
