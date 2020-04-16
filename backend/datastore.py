@@ -29,6 +29,16 @@ class League(BaseModel):
     def __str__(self):
         return self.name
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'slug': self.slug,
+            'name': self.name,
+            'region': self.region,
+            'priority': self.priority,
+            'image_url': self.image_url,
+        }
+
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
     def get_front_page_items(date) -> Iterable['League']:
