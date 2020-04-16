@@ -8,8 +8,6 @@ from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField
 
 from app_config import DB_FILE_NAME
 
-# from peewee import *
-
 sqlite_db = SqliteDatabase(DB_FILE_NAME)
 
 
