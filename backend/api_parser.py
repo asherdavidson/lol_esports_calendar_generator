@@ -43,7 +43,7 @@ def import_leagues():
 
 def match_data(json):
     for data in json['data']['schedule']['events']:
-        if data['state'] != 'inProgress':
+        if data['type'] == 'match':
             id = data['match']['id']
             start_time = parse(data['startTime'])
             block_name = data['blockName']
