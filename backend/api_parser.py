@@ -43,25 +43,26 @@ def import_leagues():
 
 def match_data(json):
     for data in json['data']['schedule']['events']:
-        id = data['match']['id']
-        start_time = parse(data['startTime'])
-        block_name = data['blockName']
-        number_of_matches = data['match']['strategy']['count']
-        team_a = data['match']['teams'][0]['code']
-        team_b = data['match']['teams'][1]['code']
+        if data['state'] != 'inProgress':
+            id = data['match']['id']
+            start_time = parse(data['startTime'])
+            block_name = data['blockName']
+            number_of_matches = data['match']['strategy']['count']
+            team_a = data['match']['teams'][0]['code']
+            team_b = data['match']['teams'][1]['code']
 
-        league_slug = data['league']['slug']
-        league = League.get(League.slug == league_slug)
+            league_slug = data['league']['slug']
+            league = League.get(League.slug == league_slug)
 
-        yield {
-            Match.id: id,
-            Match.start_time: start_time,
-            Match.block_name: block_name,
-            Match.number_of_matches: number_of_matches,
-            Match.team_a: team_a,
-            Match.team_b: team_b,
-            Match.league: league,
-        }
+            yield {
+                Match.id: id,
+                Match.start_time: start_time,
+                Match.block_name: block_name,
+                Match.number_of_matches: number_of_matches,
+                Match.team_a: team_a,
+                Match.team_b: team_b,
+                Match.league: league,
+            }
 
 
 def import_matches():
