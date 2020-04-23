@@ -76,6 +76,11 @@ def import_matches():
         r = requests.get(MATCHES_URL_PAGE_TOKEN.format(next_page_token), headers=HEADERS)
         Match.replace_many(match_data(r.json())).execute()
 
+    while last_page_token := r.json()['data']['schedule']['pages'].get('older', False):
+        print(f'Downloading previous page {last_page_token}')
+        r = requests.get(MATCHES_URL_PAGE_TOKEN.format(last_page_token), headers=HEADERS)
+        Match.replace_many(match_data(r.json())).execute()
+
 
 def import_all():
     with sqlite_db.atomic():
