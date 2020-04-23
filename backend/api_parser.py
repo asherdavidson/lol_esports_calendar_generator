@@ -79,9 +79,6 @@ def import_matches():
 
 def import_all():
     with sqlite_db.atomic():
-        drop_tables()
-        create_tables()
-
         import_leagues()
         import_matches()
 
