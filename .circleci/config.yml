@@ -28,7 +28,7 @@ jobs:
             ssh-keyscan -p ${LIVE_PORT} ${LIVE_IP} >> ~/.ssh/known_hosts
           name: Add server to known hosts
       - run:
-          command: ssh -v -p "${LIVE_PORT}" "${LIVE_USER}"@"${LIVE_IP}" "cd /var/www/lol_esports_calendar_generator; git pull; npm run build; service gunicorn-lol restart"
+          command: ssh -v -p "${LIVE_PORT}" "${LIVE_USER}"@"${LIVE_IP}" "cd /var/www/lol_esports_calendar_generator; git pull; cd frontend; npm run build; service gunicorn-lol restart"
           name: Deploy
 
 workflows:
