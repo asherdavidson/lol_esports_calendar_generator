@@ -4,18 +4,36 @@ orbs:
   python: circleci/python@0.2.1
 
 jobs:
+  test:
+    executor: python/default
+      steps:
+        - checkout
+        - python/load-cache
+        - python/install-deps
+        - python/save-cache
+        - run:
+            command: echo "Add your damn tests"
+            name: Test
+
   deploy:
     executor: python/default
     steps:
-      - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
+      - add_ssh_keys:
+          fingerprints:
+            - ${LIVE_SSH_FINGERPRINT}
       - run:
-          command: echo "This works"
+          command: |
+            ssh -p "${LIVE_PORT}" "${LIVE_USER}"@"${LIVE_IP}" "cd /var/www/lol_esports_calendar_generator; git pull; npm run build; service gunicorn-lol restart"
           name: Deploy
 
 workflows:
   main:
     jobs:
-      - deploy
+      - test
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
