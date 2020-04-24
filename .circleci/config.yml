@@ -22,8 +22,10 @@ jobs:
           fingerprints:
             - ${LIVE_SSH_FINGERPRINT}
       - run:
-          command: |
-            ssh -p "${LIVE_PORT}" "${LIVE_USER}"@"${LIVE_IP}" "cd /var/www/lol_esports_calendar_generator; git pull; npm run build; service gunicorn-lol restart"
+          command: echo '${LIVE_IP} ${LIVE_KNOWN_HOSTS}' >> ~/.ssh/known_hosts
+          name: Add server to known hosts
+      - run:
+          command: ssh -p "${LIVE_PORT}" "${LIVE_USER}"@"${LIVE_IP}" "cd /var/www/lol_esports_calendar_generator; git pull; npm run build; service gunicorn-lol restart"
           name: Deploy
 
 workflows:
