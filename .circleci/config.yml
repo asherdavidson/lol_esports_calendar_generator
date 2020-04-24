@@ -23,7 +23,7 @@ jobs:
             - df:34:25:83:57:0e:46:2c:39:f7:e8:ee:b1:a2:fa:37
       - run:
           command: |
-            mkdir ~/.ssh
+            mkdir -p ~/.ssh
             touch ~/.ssh/known_hosts
             ssh-keyscan -p ${LIVE_PORT} ${LIVE_IP} >> ~/.ssh/known_hosts
           name: Add server to known hosts
