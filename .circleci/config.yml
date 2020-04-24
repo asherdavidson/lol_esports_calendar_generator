@@ -23,6 +23,7 @@ jobs:
             - ${LIVE_SSH_FINGERPRINT}
       - run:
           command: |
+            mkdir ~/.ssh
             touch ~/.ssh/known_hosts
             echo '${LIVE_IP} ${LIVE_KNOWN_HOSTS}' >> ~/.ssh/known_hosts
           name: Add server to known hosts
