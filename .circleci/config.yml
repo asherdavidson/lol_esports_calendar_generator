@@ -20,7 +20,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - ${LIVE_SSH_FINGERPRINT}
+            - df:34:25:83:57:0e:46:2c:39:f7:e8:ee:b1:a2:fa:37
       - run:
           command: |
             mkdir ~/.ssh
