@@ -7,13 +7,14 @@ jobs:
   test:
     executor: python/default
       steps:
-        - checkout
-        - python/load-cache
-        - python/install-deps
-        - python/save-cache
-        - run:
-            command: echo "Add your damn tests"
-            name: Test
+        - run
+          - checkout
+          - python/load-cache
+          - python/install-deps
+          - python/save-cache
+          - run:
+              command: echo "Add your damn tests"
+              name: Test
 
   deploy:
     executor: python/default
