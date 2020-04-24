@@ -6,7 +6,6 @@ orbs:
 jobs:
   test:
     executor: python/default
-    resource_class: small
     steps:
         - checkout
         - python/load-cache
@@ -18,7 +17,6 @@ jobs:
 
   deploy:
     executor: python/default
-    resource_class: small
     steps:
       - add_ssh_keys:
           fingerprints:
