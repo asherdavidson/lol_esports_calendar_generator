@@ -6,15 +6,14 @@ orbs:
 jobs:
   test:
     executor: python/default
-      steps:
-        - run
-          - checkout
-          - python/load-cache
-          - python/install-deps
-          - python/save-cache
-          - run:
-              command: echo "Add your damn tests"
-              name: Test
+    steps:
+        - checkout
+        - python/load-cache
+        - python/install-deps
+        - python/save-cache
+        - run:
+            command: echo "Add your damn tests"
+            name: Test
 
   deploy:
     executor: python/default
