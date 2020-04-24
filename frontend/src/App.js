@@ -7,8 +7,11 @@ function League({league, selected, onSelected}) {
             <div id={league.slug}
                  className={'card text-center h-100 bg-light league-button ' + ((selected) ? 'clicked' : '')}>
                 <div>{selected}</div>
-                <img src={'https://am-a.akamaihd.net/image/?resize=200:200&f= ' + league.image_url}
-                     className="card-img-top bg-dark"/>
+                <img
+                    src={'https://am-a.akamaihd.net/image/?resize=200:200&f= ' + league.image_url}
+                    className="card-img-top bg-dark"
+                    alt={league.name}
+                />
                 <div className="p-2 my-auto">
                     <h5 className="card-text">{league.name}</h5>
                 </div>
