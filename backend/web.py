@@ -7,14 +7,6 @@ from backend import app
 from backend.datastore import League
 
 
-@app.route('/')
-def index():
-    leagues = League.get_front_page_items(date=datetime.now().date())
-    template = render_template('index.html', leagues=leagues)
-
-    return template
-
-
 @app.route('/api/leagues')
 def api_leagues():
     return {
