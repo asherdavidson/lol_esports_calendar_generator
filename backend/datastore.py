@@ -34,9 +34,6 @@ class League(BaseModel):
             'id': self.id,
             'slug': self.slug,
             'name': self.name,
-            'region': self.region,
-            'priority': self.priority,
-            'image_url': self.image_url,
         }
 
     @staticmethod
