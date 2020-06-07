@@ -75,8 +75,13 @@ class Page extends React.Component {
                 </div>
                 <div className="row">
                     <div className="col alert alert-primary mx-3 text-center">
-                        <span>Your link: {this.selectedLeagues().length === 0 && 'Select some leagues!'}</span>
+                        <span>Your link: {this.selectedLeagues().length === 0 && 'Select some leagues first!'}</span>
                         <a id="calendar_url" href={this.calendarUrl()}>{this.selectedLeagues().join(', ')}</a>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col alert alert-info mx-3 text-center">
+                        Copy the link above and paste it into your calendar application. There may be an option "Add calendar by URL."
                     </div>
                 </div>
                 <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6">
