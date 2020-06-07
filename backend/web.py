@@ -1,7 +1,7 @@
 from datetime import datetime
 from io import BytesIO
 
-from flask import render_template, request, send_file, abort
+from flask import request, send_file, abort
 
 from backend import app
 from backend.datastore import League
@@ -16,7 +16,9 @@ def api_leagues():
 
 @app.route('/api/query-leagues')
 def api_query_leagues():
-    leagues = tuple(sorted(request.args.get('leagues', '').split(',')))
+    valid_leagues = [league.slug for league in League.get_front_page_items(date=datetime.now().date())]
+    cleaned_league_names = set(league.strip() for league in request.args.get('leagues', '').split(',') if league in valid_leagues)
+    leagues = tuple(sorted(cleaned_league_names))
 
     if len(leagues) == 1 and leagues[0] == '':
         return abort(400)
