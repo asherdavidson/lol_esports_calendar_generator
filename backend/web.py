@@ -21,7 +21,7 @@ def api_query_leagues():
     if len(leagues) == 1 and leagues[0] == '':
         return abort(400)
 
-    calendar = League.generate_cal(leagues)
+    calendar = League.generate_cal(leagues, date=datetime.now().date())
 
     io = BytesIO(calendar)
     io.seek(0)

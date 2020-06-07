@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 from functools import lru_cache
 from typing import Iterable, Tuple
 
@@ -38,7 +38,7 @@ class League(BaseModel):
 
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
-    def get_front_page_items(date) -> Iterable['League']:
+    def get_front_page_items(date: date) -> Iterable['League']:
         return list(League.select().order_by(League.priority))
 
     @staticmethod
@@ -50,8 +50,8 @@ class League(BaseModel):
                 .order_by(Match.start_time))
 
     @staticmethod
-    @lru_cache
-    def generate_cal(leagues: Tuple[str]) -> bytes:
+    @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
+    def generate_cal(leagues: Tuple[str], date: date) -> bytes:
         matches = League.query_league_matches(leagues)
 
         cal = Calendar()
