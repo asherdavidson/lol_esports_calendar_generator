@@ -1,5 +1,7 @@
+import os
 import requests
 from dateutil.parser import parse
+from urllib.parse import urlparse
 
 from .datastore import League, Match, drop_tables, create_tables, sqlite_db
 
@@ -15,6 +17,9 @@ MATCHES_URL = "https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US"
 MATCHES_URL_PAGE_TOKEN = (
     "https://prod-relapi.ewp.gg/persisted/gw/getSchedule?hl=en-US&pageToken={}"
 )
+
+# Image storage directory
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'frontend', 'public', 'assets', 'img')
 
 
 def league_data():
@@ -38,9 +43,43 @@ def league_data():
         }
 
 
+def download_league_image(image_url, slug):
+    """Download league image and save it to the assets directory."""
+    try:
+        # Ensure assets directory exists
+        os.makedirs(ASSETS_DIR, exist_ok=True)
+        
+        # Download the image
+        response = requests.get(image_url, headers=HEADERS)
+        response.raise_for_status()
+        
+        # Get file extension from URL
+        parsed_url = urlparse(image_url)
+        file_extension = os.path.splitext(parsed_url.path)[1] or '.png'
+        
+        # Save image with league slug as filename
+        filename = f"{slug}{file_extension}"
+        filepath = os.path.join(ASSETS_DIR, filename)
+        
+        with open(filepath, 'wb') as f:
+            f.write(response.content)
+            
+        print(f"Downloaded image for {slug}: {filename}")
+        return True
+        
+    except Exception as e:
+        print(f"Failed to download image for {slug}: {e}")
+        return False
+
+
 def import_leagues():
     print("Importing leagues")
     League.replace_many(league_data()).execute()
+    
+    # Download images for all leagues
+    print("Downloading league images")
+    for league in League.select():
+        download_league_image(league.image_url, league.slug)
 
 
 def match_data(json):
