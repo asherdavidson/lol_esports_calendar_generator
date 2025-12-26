@@ -4,7 +4,14 @@ from typing import Iterable, Tuple
 
 from dateutil.parser import parse
 from icalendar import Event, Calendar
-from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField, ForeignKeyField
+from peewee import (
+    SqliteDatabase,
+    Model,
+    CharField,
+    IntegerField,
+    DateTimeField,
+    ForeignKeyField,
+)
 
 from app_config import DB_FILE_NAME
 
@@ -31,23 +38,24 @@ class League(BaseModel):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'slug': self.slug,
-            'name': self.name,
+            "id": self.id,
+            "slug": self.slug,
+            "name": self.name,
         }
 
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
-    def get_front_page_items(date: date) -> Iterable['League']:
+    def get_front_page_items(date: date) -> Iterable["League"]:
         return list(League.select().order_by(League.priority))
 
     @staticmethod
     def query_league_matches(leagues):
-        return (Match
-                .select(Match, League)
-                .join(League)
-                .where(League.slug.in_(leagues))
-                .order_by(Match.start_time))
+        return (
+            Match.select(Match, League)
+            .join(League)
+            .where(League.slug.in_(leagues))
+            .order_by(Match.start_time)
+        )
 
     @staticmethod
     @lru_cache  # cache the items once per day (i.e. clear the cache once per day)
@@ -55,9 +63,9 @@ class League(BaseModel):
         matches = League.query_league_matches(leagues)
 
         cal = Calendar()
-        cal.add('summary', "LoL eSports Calendar")
-        cal.add('prodid', '-//LoL eSports Calendar Generator//asherdavidson.net//')
-        cal.add('x-wr-calname', "LoL eSports Calendar")
+        cal.add("summary", "LoL eSports Calendar")
+        cal.add("prodid", "-//LoL eSports Calendar Generator//asherdavidson.net//")
+        cal.add("x-wr-calname", "LoL eSports Calendar")
 
         for match in matches:
             cal.add_component(match.get_ical_event_with_time())
@@ -73,11 +81,11 @@ class Match(BaseModel):
     team_a = CharField(null=True)
     team_b = CharField(null=True)
 
-    league = ForeignKeyField(League, backref='matches')
+    league = ForeignKeyField(League, backref="matches")
 
     def __str__(self):
-        block_name_formatted = f' {self.block_name}' if self.block_name else ''
-        return f'{self.league.name}{block_name_formatted}: {self.team_a} vs {self.team_b} (bo{self.number_of_matches})'
+        block_name_formatted = f" {self.block_name}" if self.block_name else ""
+        return f"{self.league.name}{block_name_formatted}: {self.team_a} vs {self.team_b} (bo{self.number_of_matches})"
 
     def get_ical_event_with_time(self):
         dtstart = parse(self.start_time)
@@ -85,10 +93,10 @@ class Match(BaseModel):
         dtstamp = dtstart.date()
 
         event = Event()
-        event.add('summary', str(self))
-        event.add('dtstart', dtstart)
-        event.add('dtend', dtend)
-        event.add('dtstamp', dtstamp)
+        event.add("summary", str(self))
+        event.add("dtstart", dtstart)
+        event.add("dtend", dtend)
+        event.add("dtstamp", dtstamp)
 
         return event
 
@@ -100,13 +108,14 @@ MODELS = [
 
 
 def create_tables():
-    print(f'WARNING: Creating tables: {", ".join(map(str, MODELS))}')
+    print(f"WARNING: Creating tables: {', '.join(map(str, MODELS))}")
     sqlite_db.create_tables(MODELS)
 
 
 def drop_tables():
-    print(f'WARNING: Dropping tables: {", ".join(map(str, MODELS))}')
+    print(f"WARNING: Dropping tables: {', '.join(map(str, MODELS))}")
     sqlite_db.drop_tables(MODELS)
+
 
 # if __name__ == '__main__':
 #     drop_tables()

@@ -3,10 +3,10 @@
     background-color: #e6dc38 !important;
 }
 
-div.clicked {
+.clicked {
     background-color: #81ff94 !important;
 }
 
-div.clicked:hover {
+.clicked:hover {
     background-color: #64ffcf !important;
 }
