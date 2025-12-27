@@ -6,6 +6,9 @@ name: Build Frontend Package
 on:
   release:
     types: [created]
+  push: 
+    branches:
+      - main
 
 jobs:
   publish-gpr:
