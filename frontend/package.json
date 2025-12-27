@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "@asherdavidson/lol_esports_calendar_generator",
   "version": "2.0.0",
   "private": false,
   "dependencies": {
