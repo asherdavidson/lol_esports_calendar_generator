@@ -57,7 +57,7 @@ uv sync
 cp app_config.sample.py app_config.py
 
 # Import data from LoL eSports API
-uv run python backend/api_parser.py
+uv run python -m backend.api_parser
 
 # Run Flask development server
 uv run flask --app backend run

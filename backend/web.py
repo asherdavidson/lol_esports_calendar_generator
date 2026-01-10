@@ -3,7 +3,7 @@ from io import BytesIO
 
 from flask import Flask, request, send_file, abort
 
-from .datastore import League
+from backend.datastore import League
 
 
 app = Flask(__name__)

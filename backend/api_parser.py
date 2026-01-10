@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 from sqlalchemy import select
 
-from .datastore import League, Match, SessionLocal
+from backend.datastore import League, Match, SessionLocal
 
 API_KEY = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"  # public API key
 HEADERS = {
