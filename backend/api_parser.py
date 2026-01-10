@@ -3,7 +3,9 @@ import requests
 from dateutil.parser import parse
 from urllib.parse import urlparse
 
-from .datastore import League, Match, drop_tables, create_tables, sqlite_db
+from sqlalchemy import select
+
+from .datastore import League, Match, SessionLocal
 
 API_KEY = "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z"  # public API key
 HEADERS = {
@@ -26,20 +28,13 @@ def league_data():
     r = requests.get(LEAGUES_URL, headers=HEADERS)
 
     for data in r.json()["data"]["leagues"]:
-        id = data["id"]
-        slug = data["slug"]
-        name = data["name"]
-        region = data["region"]
-        image_url = data["image"]
-        priority = data["priority"]
-
         yield {
-            League.id: id,
-            League.slug: slug,
-            League.name: name,
-            League.region: region,
-            League.image_url: image_url,
-            League.priority: priority,
+            "id": data["id"],
+            "slug": data["slug"],
+            "name": data["name"],
+            "region": data["region"],
+            "image_url": data["image"],
+            "priority": data["priority"],
         }
 
 
@@ -48,89 +43,116 @@ def download_league_image(image_url, slug):
     try:
         # Ensure assets directory exists
         os.makedirs(ASSETS_DIR, exist_ok=True)
-        
+
         # Download the image
         response = requests.get(image_url, headers=HEADERS)
         response.raise_for_status()
-        
+
         # Get file extension from URL
         parsed_url = urlparse(image_url)
         file_extension = os.path.splitext(parsed_url.path)[1] or '.png'
-        
+
         # Save image with league slug as filename
         filename = f"{slug}{file_extension}"
         filepath = os.path.join(ASSETS_DIR, filename)
-        
+
         with open(filepath, 'wb') as f:
             f.write(response.content)
-            
+
         print(f"Downloaded image for {slug}: {filename}")
         return True
-        
+
     except Exception as e:
         print(f"Failed to download image for {slug}: {e}")
         return False
 
 
-def import_leagues():
+def import_leagues(session):
     print("Importing leagues")
-    League.replace_many(league_data()).execute()
-    
+    for data in league_data():
+        league = session.get(League, data["id"])
+        if league:
+            # Update existing league
+            for key, value in data.items():
+                setattr(league, key, value)
+        else:
+            # Insert new league
+            league = League(**data)
+            session.add(league)
+    session.commit()
+
     # Download images for all leagues
     print("Downloading league images")
-    for league in League.select():
+    stmt = select(League)
+    for league in session.scalars(stmt):
         download_league_image(league.image_url, league.slug)
 
 
-def match_data(json):
+def match_data(json, session):
     for data in json["data"]["schedule"]["events"]:
         if data["type"] == "match":
-            id = data["match"]["id"]
-            start_time = parse(data["startTime"])
-            block_name = data["blockName"]
-            number_of_matches = data["match"]["strategy"]["count"]
-            team_a = data["match"]["teams"][0]["code"]
-            team_b = data["match"]["teams"][1]["code"]
-
             league_slug = data["league"]["slug"]
-            league = League.get(League.slug == league_slug)
+            stmt = select(League).where(League.slug == league_slug)
+            league = session.scalar(stmt)
+
+            if not league:
+                print(f"Warning: League {league_slug} not found, skipping match")
+                continue
 
             yield {
-                Match.id: id,
-                Match.start_time: start_time,
-                Match.block_name: block_name,
-                Match.number_of_matches: number_of_matches,
-                Match.team_a: team_a,
-                Match.team_b: team_b,
-                Match.league: league,
+                "id": data["match"]["id"],
+                "start_time": parse(data["startTime"]),
+                "block_name": data["blockName"],
+                "number_of_matches": data["match"]["strategy"]["count"],
+                "team_a": data["match"]["teams"][0]["code"],
+                "team_b": data["match"]["teams"][1]["code"],
+                "league_id": league.id,
             }
 
 
-def import_matches():
+def import_matches_batch(session, json_data):
+    """Import a batch of matches from JSON data."""
+    for data in match_data(json_data, session):
+        match = session.get(Match, data["id"])
+        if match:
+            # Update existing match
+            for key, value in data.items():
+                setattr(match, key, value)
+        else:
+            # Insert new match
+            match = Match(**data)
+            session.add(match)
+    session.commit()
+
+
+def import_matches(session):
     print("Importing matches")
 
     r = requests.get(MATCHES_URL, headers=HEADERS)
-    Match.replace_many(match_data(r.json())).execute()
+    import_matches_batch(session, r.json())
 
     while next_page_token := r.json()["data"]["schedule"]["pages"].get("newer", False):
         print(f"Downloading next page {next_page_token}")
         r = requests.get(
             MATCHES_URL_PAGE_TOKEN.format(next_page_token), headers=HEADERS
         )
-        Match.replace_many(match_data(r.json())).execute()
+        import_matches_batch(session, r.json())
 
     while last_page_token := r.json()["data"]["schedule"]["pages"].get("older", False):
         print(f"Downloading previous page {last_page_token}")
         r = requests.get(
             MATCHES_URL_PAGE_TOKEN.format(last_page_token), headers=HEADERS
         )
-        Match.replace_many(match_data(r.json())).execute()
+        import_matches_batch(session, r.json())
 
 
 def import_all():
-    with sqlite_db.atomic():
-        import_leagues()
-        import_matches()
+    session = SessionLocal()
+    try:
+        import_leagues(session)
+        import_matches(session)
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":

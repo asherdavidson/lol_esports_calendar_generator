@@ -30,6 +30,7 @@ RUN uv sync --frozen --no-dev
 # Switch back to root to copy application code
 USER root
 COPY backend/ ./backend/
+COPY alembic.ini ./
 
 # Fix permissions after copying
 RUN chown -R appuser:appuser /app

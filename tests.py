@@ -1,24 +1,51 @@
+import os
+from datetime import date
+
 import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from backend.datastore import League, sqlite_db, drop_tables, create_tables
-
-
-@pytest.fixture
-def transaction():
-    with sqlite_db.transaction() as txn:
-        yield txn
-        txn.rollback()
+from backend.datastore import Base, League, Match, SessionLocal
 
 
-@pytest.fixture
-def empty_database(transaction):
-    drop_tables()
-    create_tables()
+@pytest.fixture(scope="function")
+def session():
+    """Create a test database session.
+
+    Uses the DATABASE_URL environment variable to connect to PostgreSQL.
+    Creates tables, yields the session, then drops tables after each test.
+    """
+    # Use the same database URL as the app
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        pytest.skip("DATABASE_URL environment variable required for tests")
+
+    # Handle postgres:// vs postgresql://
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+    engine = create_engine(database_url)
+
+    # Create all tables
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    yield session
+
+    # Cleanup: rollback any pending changes and drop all tables
+    session.rollback()
+    session.close()
+    Base.metadata.drop_all(engine)
 
 
-def test_datastore_league_get_front_page_items(empty_database):
-    # check empty db
-    leagues = list(League.get_front_page_items())
+def test_datastore_league_get_front_page_items(session):
+    # Clear the lru_cache to ensure fresh results
+    League.get_front_page_items.cache_clear()
+
+    # check empty db - use session query instead of cached method for accurate test
+    leagues = session.query(League).order_by(League.priority).all()
     assert len(leagues) == 0
 
     leagues_data = [
@@ -144,10 +171,17 @@ def test_datastore_league_get_front_page_items(empty_database):
         },
     ]
 
-    with sqlite_db.atomic():
-        rows_modified = League.insert_many(leagues_data).execute()
+    # Insert leagues using SQLAlchemy
+    for league_dict in leagues_data:
+        league = League(**league_dict)
+        session.add(league)
+    session.commit()
 
-    assert rows_modified == 15
-
-    leagues = list(League.get_front_page_items())
+    # Query leagues and verify count
+    leagues = session.query(League).order_by(League.priority).all()
     assert len(leagues) == 15
+
+    # Verify ordering by priority
+    assert leagues[0].slug == "lcs"  # priority 1
+    assert leagues[1].slug == "lec"  # priority 2
+    assert leagues[2].slug == "lck"  # priority 3

@@ -9,9 +9,11 @@ This is a League of Legends eSports calendar generator that creates .ical files 
 ## Development Commands
 
 ### Backend (Python)
-- **Run tests**: `python -m pytest tests.py`
-- **Import data**: `python backend/api_parser.py` (imports leagues and matches from LoL API)
-- **Start Flask server**: `python -m flask --app backend run` (development server)
+- **Start PostgreSQL**: `docker compose up postgres -d`
+- **Run migrations**: `DATABASE_URL=postgresql://lolcalendar:devpassword@localhost:5432/lolcalendar uv run alembic upgrade head`
+- **Run tests**: `DATABASE_URL=postgresql://lolcalendar:devpassword@localhost:5432/lolcalendar uv run pytest tests.py`
+- **Import data**: `DATABASE_URL=postgresql://lolcalendar:devpassword@localhost:5432/lolcalendar uv run python -m backend.api_parser`
+- **Start Flask server**: `DATABASE_URL=postgresql://lolcalendar:devpassword@localhost:5432/lolcalendar uv run python -m flask --app backend run`
 
 ### Frontend (Vue)
 Navigate to `frontend/` directory first:
@@ -27,8 +29,9 @@ Navigate to `frontend/` directory first:
 
 ### Backend Structure (`backend/`)
 - **`api_parser.py`**: Handles data import from LoL eSports API using public API key. Contains functions for importing leagues and matches with pagination support.
-- **`datastore.py`**: Database models using Peewee ORM with SQLite. Defines `League` and `Match` models with calendar generation functionality.
-- **`web.py`**: Flask API endpoints serving league data and generating .ical calendar files.
+- **`datastore.py`**: Database models using SQLAlchemy ORM with PostgreSQL. Defines `League` and `Match` models with calendar generation functionality.
+- **`web.py`**: Flask API endpoints serving league data and generating .ical calendar files. Runs Alembic migrations on startup.
+- **`migrations/`**: Alembic database migrations.
 - **`__init__.py`**: Flask app initialization.
 
 ### Frontend Structure (`frontend/src/`)
@@ -38,20 +41,19 @@ Navigate to `frontend/` directory first:
 - Components: `App.vue` (main application) and `League.vue` (league selection cards)
 
 ### Database
-- SQLite database (`datastore.db`) managed via Peewee ORM
+- PostgreSQL database managed via SQLAlchemy ORM
+- Alembic for database migrations
 - Models: `League` (eSports leagues) and `Match` (individual matches)
 - Database operations include caching with `@lru_cache` for performance
+- Requires `DATABASE_URL` environment variable
 
 ### API Integration
 - Uses LoL eSports public API (`prod-relapi.ewp.gg`) with public API key
 - Imports league and match data with pagination support
 - Generates iCalendar format for calendar applications
 
-### Configuration
-- Database file name configured in `app_config.py`
-- Sample config provided in `app_config.sample.py`
-
 ### Deployment
-- CircleCI configuration for automated testing and deployment
-- Deploys to production server via SSH on master branch commits
-- Frontend build process integrated into deployment pipeline
+- GitHub Actions workflow for automated testing and deployment
+- Deploys to DigitalOcean via SSH on master branch commits
+- Docker containers for backend and frontend
+- Alembic migrations run automatically on Flask startup
