@@ -15,14 +15,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
+# Create non-root user first
+RUN useradd --create-home appuser
+
 # Install Python and dependencies via uv
 RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY backend/ ./backend/
 
-# Create non-root user for security
-RUN useradd --create-home appuser && chown -R appuser:appuser /app
+# Fix permissions after all files are in place
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 5000
