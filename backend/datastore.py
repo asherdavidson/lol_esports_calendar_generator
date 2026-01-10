@@ -6,7 +6,7 @@ from typing import Tuple, Optional
 from dateutil.parser import parse
 from icalendar import Event, Calendar
 from sqlalchemy import create_engine, String, Integer, DateTime, ForeignKey, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker, joinedload
 
 
 def get_database_url() -> str:
@@ -92,11 +92,12 @@ class League(Base):
         try:
             stmt = (
                 select(Match)
+                .options(joinedload(Match.league))
                 .join(League)
                 .where(League.slug.in_(leagues))
                 .order_by(Match.start_time)
             )
-            return list(session.scalars(stmt))
+            return list(session.scalars(stmt).unique())
         finally:
             session.close()
 
