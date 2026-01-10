@@ -21,7 +21,6 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY backend/ ./backend/
-COPY app_config.py ./
 
 # Create non-root user for security
 RUN useradd --create-home appuser && chown -R appuser:appuser /app
