@@ -1,11 +1,14 @@
+import os
 from datetime import timedelta, date
 from functools import lru_cache
 from typing import Iterable, Tuple
+from urllib.parse import urlparse
 
 from dateutil.parser import parse
 from icalendar import Event, Calendar
 from peewee import (
     SqliteDatabase,
+    PostgresqlDatabase,
     Model,
     CharField,
     IntegerField,
@@ -13,14 +16,37 @@ from peewee import (
     ForeignKeyField,
 )
 
-from app_config import DB_FILE_NAME
 
-sqlite_db = SqliteDatabase(DB_FILE_NAME)
+def get_database():
+    """Get database connection based on DATABASE_URL environment variable.
+
+    Falls back to SQLite for local development if DATABASE_URL is not set.
+    """
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        # Parse PostgreSQL connection string
+        parsed = urlparse(database_url)
+        return PostgresqlDatabase(
+            parsed.path[1:],  # Remove leading slash from database name
+            user=parsed.username,
+            password=parsed.password,
+            host=parsed.hostname,
+            port=parsed.port or 25060,
+            sslmode="require",
+        )
+    else:
+        # Fallback to SQLite for local development
+        from app_config import DB_FILE_NAME
+        return SqliteDatabase(DB_FILE_NAME)
+
+
+db = get_database()
 
 
 class BaseModel(Model):
     class Meta:
-        database = sqlite_db
+        database = db
 
 
 class League(BaseModel):
@@ -109,12 +135,12 @@ MODELS = [
 
 def create_tables():
     print(f"WARNING: Creating tables: {', '.join(map(str, MODELS))}")
-    sqlite_db.create_tables(MODELS)
+    db.create_tables(MODELS)
 
 
 def drop_tables():
     print(f"WARNING: Dropping tables: {', '.join(map(str, MODELS))}")
-    sqlite_db.drop_tables(MODELS)
+    db.drop_tables(MODELS)
 
 
 # if __name__ == '__main__':

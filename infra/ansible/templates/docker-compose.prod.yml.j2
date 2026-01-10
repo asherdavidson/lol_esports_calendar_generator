@@ -1,0 +1,31 @@
+# Production docker-compose configuration
+# SSL is handled by Cloudflare - this only exposes HTTP on port 80
+
+services:
+  backend:
+    image: ghcr.io/{{ github_repository }}/backend:latest
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - FLASK_ENV=production
+    expose:
+      - "5000"
+    restart: always
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/leagues')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    image: ghcr.io/{{ github_repository }}/frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: always
+
+networks:
+  default:
+    name: lol-calendar-network

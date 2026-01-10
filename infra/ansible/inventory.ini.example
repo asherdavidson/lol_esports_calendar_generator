@@ -1,0 +1,12 @@
+# Example inventory file
+# Copy this to inventory.ini and fill in your values
+# Or use the output from `terraform output ansible_inventory`
+
+[app]
+YOUR_DROPLET_IP ansible_user=root
+
+[app:vars]
+database_url=postgresql://user:password@host:25060/dbname?sslmode=require
+github_repository=your-username/lol_esports_calendar_generator
+github_username=your-github-username
+github_token=your-github-pat
