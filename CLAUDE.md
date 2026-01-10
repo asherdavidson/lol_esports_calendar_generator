@@ -30,7 +30,7 @@ Navigate to `frontend/` directory first:
 ### Backend Structure (`backend/`)
 - **`api_parser.py`**: Handles data import from LoL eSports API using public API key. Contains functions for importing leagues and matches with pagination support.
 - **`datastore.py`**: Database models using SQLAlchemy ORM with PostgreSQL. Defines `League` and `Match` models with calendar generation functionality.
-- **`web.py`**: Flask API endpoints serving league data and generating .ical calendar files. Runs Alembic migrations on startup.
+- **`web.py`**: Flask API endpoints serving league data and generating .ical calendar files.
 - **`migrations/`**: Alembic database migrations.
 - **`__init__.py`**: Flask app initialization.
 
@@ -56,4 +56,4 @@ Navigate to `frontend/` directory first:
 - GitHub Actions workflow for automated testing and deployment
 - Deploys to DigitalOcean via SSH on master branch commits
 - Docker containers for backend and frontend
-- Alembic migrations run automatically on Flask startup
+- Run migrations manually before deploying: `uv run alembic upgrade head`

@@ -3,14 +3,10 @@ from io import BytesIO
 
 from flask import Flask, request, send_file, abort
 
-from .datastore import League, run_migrations
+from .datastore import League
 
 
 app = Flask(__name__)
-
-# Run database migrations on startup
-with app.app_context():
-    run_migrations()
 
 
 @app.route("/api/leagues")
