@@ -190,11 +190,12 @@ This installs Docker and prepares the server for deployments.
 
 Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
 
-| Secret            | Value                                                    |
-| ----------------- | -------------------------------------------------------- |
-| `DROPLET_IP`      | Droplet IP from Terraform output                         |
-| `DROPLET_SSH_KEY` | Your private SSH key (entire content of `~/.ssh/id_rsa`) |
-| `DATABASE_URL`    | Database URL from `terraform output -raw database_url`   |
+| Secret            | Value                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| `DROPLET_IP`      | Droplet IP from Terraform output                                                                           |
+| `DROPLET_SSH_KEY` | Your private SSH key (entire content of `~/.ssh/id_rsa`)                                                   |
+| `DATABASE_URL`    | Database URL from `terraform output -raw database_url`                                                     |
+| `GHCR_PAT`        | [GitHub Personal Access Token](https://github.com/settings/tokens) with `read:packages` scope for pulling |
 
 ### Step 5: Deploy
 
