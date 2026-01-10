@@ -1,5 +1,8 @@
 FROM debian:bookworm-slim
 
+# Install uv via official docker image
+COPY --from=ghcr.io/astral-sh/uv:0.9.24 /uv /uvx /bin/
+
 WORKDIR /app
 
 # Install system dependencies
@@ -8,10 +11,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
-
-# Install uv via official script
-ENV UV_INSTALL_DIR="/usr/local"
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
